@@ -213,6 +213,12 @@ impl PayloadSource {
     }
 }
 
+#[rpc(client, namespace = "miner")]
+pub trait MinerApi {
+    #[method(name = "setMaxDASize")]
+    async fn set_max_da_size(&self, max_tx_size: u64, max_block_size: u64) -> RpcResult<bool>;
+}
+
 #[rpc(server, client)]
 pub trait EngineApi {
     #[method(name = "engine_forkchoiceUpdatedV3")]

@@ -16,8 +16,8 @@ use op_alloy_consensus::TxDeposit;
 use op_alloy_rpc_types_engine::OpPayloadAttributes;
 use parking_lot::Mutex;
 use proxy::{ProxyHandler, start_proxy_server};
-use rollup_boost::DebugClient;
 use rollup_boost::{AuthLayer, AuthService};
+use rollup_boost::{DebugClient, MinerApiClient};
 use rollup_boost::{EngineApiClient, OpExecutionPayloadEnvelope, Version};
 use rollup_boost::{NewPayload, PayloadSource};
 use serde_json::Value;
@@ -149,6 +149,17 @@ impl EngineApi {
             false,
         )
         .await?)
+    }
+
+    pub async fn set_max_da_size(
+        &self,
+        max_tx_size: u64,
+        max_block_size: u64,
+    ) -> eyre::Result<bool> {
+        Ok(
+            MinerApiClient::set_max_da_size(&self.engine_api_client, max_tx_size, max_block_size)
+                .await?,
+        )
     }
 }
 
@@ -370,6 +381,13 @@ impl RollupBoostTestHarness {
             SimpleBlockGenerator::new(validator, engine_api, self.genesis.clone());
         block_creator.init().await?;
         Ok(block_creator)
+    }
+
+    pub async fn engine_api(&self) -> eyre::Result<EngineApi> {
+        Ok(EngineApi::new(
+            &self.rollup_boost.rpc_endpoint(),
+            JWT_SECRET,
+        )?)
     }
 
     pub async fn debug_client(&self) -> DebugClient {
